@@ -1,4 +1,3 @@
-# Import necessary libraries
 import pandas as pd
 import re
 import torch
@@ -8,9 +7,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
-# -----------------------------
-# Data Preprocessing Functions
-# -----------------------------
+
 def extract_feature_ip_analysis(message):
     ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
     ips = re.findall(ip_pattern, message)
@@ -33,9 +30,7 @@ def load_and_preprocess_logs(file_path):
     data[feature_columns] = scaler.fit_transform(data[feature_columns])
     return data[feature_columns].values
 
-# -----------------------------
-# Autoencoder Model Definition
-# -----------------------------
+
 class Autoencoder(nn.Module):
     def __init__(self, input_size):
         super(Autoencoder, self).__init__()
@@ -59,10 +54,8 @@ class Autoencoder(nn.Module):
         x = self.encoder(x)
         x = self.decoder(x)
         return x
-# -----------------------------
-# Function to Train the Model
-# -----------------------------
-def train_model(data_loader, model, criterion, optimizer, num_epochs=50):
+
+def train_model(data_loader, model, criterion, optimizer, num_epochs=400): #set number of epochs
     for epoch in range(num_epochs):
         model.train()
         for inputs, in data_loader:
@@ -73,34 +66,25 @@ def train_model(data_loader, model, criterion, optimizer, num_epochs=50):
             optimizer.step()
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
-# -----------------------------
-# Main Execution
-# -----------------------------
+
 def main():
-    # Load and preprocess the second dataset
-    file_path = 'E:\\CISO AI\\Syslogd\\Logs\\SyslogCatchAll-2023-12-18.txt'
+    file_path = 'E:\\CISO AI\\Syslogd\\Logs\\SyslogCatchAll-2023-12-24.txt'
     processed_data = load_and_preprocess_logs(file_path)
 
-    # Convert to PyTorch tensors
     tensor_data = torch.Tensor(processed_data)
     train_loader = DataLoader(TensorDataset(tensor_data), batch_size=64, shuffle=True)
 
-    # Initialize the model
     input_size = processed_data.shape[1]
     model = Autoencoder(input_size)
 
-    # Load the previously trained model
-    model.load_state_dict(torch.load('autoencoder_model.pth'))
+    model.load_state_dict(torch.load('autoencoder_model_updated.pth'))
     model.eval()
 
-    # Loss function and optimizer
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    # Continue training the model on the second dataset
     train_model(train_loader, model, criterion, optimizer)
 
-    # Save the updated model
     torch.save(model.state_dict(), 'autoencoder_model_updated.pth')
 
 if __name__ == "__main__":

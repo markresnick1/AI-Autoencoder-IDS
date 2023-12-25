@@ -1,4 +1,3 @@
-# Import necessary libraries
 import pandas as pd
 import re
 import torch
@@ -8,9 +7,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
-# -----------------------------
-# Data Preprocessing Functions
-# -----------------------------
+
 def extract_feature_ip_analysis(message):
     ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
     ips = re.findall(ip_pattern, message)
@@ -33,9 +30,7 @@ def load_and_preprocess_logs(file_path):
     data[feature_columns] = scaler.fit_transform(data[feature_columns])
     return data[feature_columns].values
 
-# -----------------------------
-# Autoencoder Model Definition
-# -----------------------------
+
 class Autoencoder(nn.Module):
     def __init__(self, input_size):
         super(Autoencoder, self).__init__()
@@ -60,29 +55,23 @@ class Autoencoder(nn.Module):
         x = self.decoder(x)
         return x
 
-# -----------------------------
-# Main Execution
-# -----------------------------
+
 def main():
-    # Load and preprocess the data
+
     file_path = 'E:\\CISO AI\\Syslogd\\Logs\\SyslogCatchAll-2023-12-17.txt'
     processed_data = load_and_preprocess_logs(file_path)
 
-    # Convert to PyTorch tensors and split the dataset
     tensor_data = torch.Tensor(processed_data)
     train_data, val_data = train_test_split(tensor_data, test_size=0.2)
     train_loader = DataLoader(TensorDataset(train_data), batch_size=64, shuffle=True)
     val_loader = DataLoader(TensorDataset(val_data), batch_size=64, shuffle=False)
 
-    # Initialize the model
     input_size = processed_data.shape[1]
     model = Autoencoder(input_size)
 
-    # Loss function and optimizer
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    # Training loop
     num_epochs = 50
     for epoch in range(num_epochs):
         model.train()
@@ -93,13 +82,11 @@ def main():
             loss.backward()
             optimizer.step()
 
-        # Optional: Validation step
         model.eval()
         with torch.no_grad():
             val_loss = sum(criterion(model(inputs), inputs).item() for inputs, in val_loader) / len(val_loader)
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}, Val Loss: {val_loss:.4f}')
 
-    # Save the model
     torch.save(model.state_dict(), 'autoencoder_model.pth')
 
 
